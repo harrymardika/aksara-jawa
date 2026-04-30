@@ -1,3 +1,4 @@
 /data
 *.pdf
 yolo26n-cls.pt
+/kernels
