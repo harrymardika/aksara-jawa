@@ -77,33 +77,30 @@ untuk menjelaskan *bagaimana* dan *mengapa* model sampai pada keputusannya.
 ```text
 aksara-jawa/
 ├── preprocess.ipynb        # Unduh + preprocessing dataset (crop, resize, pad)
-├── data.ipynb              # EDA: distribusi kelas dataset
 ├── model.ipynb             # Training, evaluasi, probability-shift, bedah blok
 ├── kernel.ipynb            # Muat kernel_history.pkl → tabel & ekspor kernels/*.txt
 ├── tensorboard.ipynb       # Menampilkan log TensorBoard
-├── preprocess.txt          # Ekspor skrip dari preprocess.ipynb
-├── model.py                # Ekspor skrip dari model.ipynb
-├── kernel.txt              # Ekspor skrip dari kernel.ipynb
 ├── architecture.md         # Ringkasan arsitektur (output torchinfo.summary)
-├── yolo26n-cls.pt          # Bobot pretrained YOLO26 nano-classification
+├── yolo26n-cls.pt          # Bobot pretrained YOLO26 nano-classification (di-.gitignore)
 ├── kernel_history.pkl      # Rekaman bobot kernel seluruh Conv2d per epoch (~60 MB)
-├── Guide.pdf               # Panduan / catatan pendukung
+├── LICENSE                 # Lisensi MIT
+├── README.md               # File ini
 ├── data/                   # Dataset (di-.gitignore)
 │   ├── v3/v3/{train,val}/<kelas>/   # Sumber mentah dari kagglehub
 │   ├── prediction/prediction/       # Sumber mentah data uji (folder datar)
-│   └── final/                       # Hasil preprocessing (dipakai training)
-│       ├── train/<kelas>/*.png
-│       ├── val/<kelas>/*.png
-│       └── test/*.png               # Folder datar, label dari nama file
+│   ├── final/                       # Hasil preprocessing (dipakai training)
+│   │   ├── train/<kelas>/*.png
+│   │   ├── val/<kelas>/*.png
+│   │   └── test/*.png               # Folder datar, label dari nama file
+│   └── .complete                    # Flag bahwa preprocessing selesai
 ├── model/
 │   └── best_model.pt       # Checkpoint model terbaik (disimpan saat val acc naik)
-├── kernels/                # Evolusi nilai kernel per layer (*.txt)
-├── images/                 # Graf komputasi & plot progres pelatihan
+├── kernels/                # Evolusi nilai kernel per layer (*.txt) (di-.gitignore)
+├── images/                 # Visualisasi
+│   ├── model_computation_graph.png  # Graf komputasi model (torchviz)
+│   └── learning_progression.png     # Plot akurasi & loss pelatihan
 └── runs/                   # Log TensorBoard (yolo26-aksara_<timestamp>/)
 ```
-
-> Folder `data/`, seluruh `*.pdf`, `yolo26n-cls.pt`, dan `kernels/` tercantum di
-> `.gitignore`.
 
 ## Kebutuhan Sistem
 
@@ -171,9 +168,8 @@ perlu diunduh terpisah. Dataset disiapkan melalui langkah preprocessing di bawah
 ## Cara Penggunaan
 
 Seluruh alur kerja dijalankan melalui **Jupyter Notebook** (tidak ada antarmuka
-*command-line*/argparse). Berkas `.py`/`.txt` di root adalah hasil ekspor skrip
-dari notebook dan berguna sebagai rujukan pembacaan kode. Jalankan notebook
-secara berurutan:
+*command-line*/argparse). Notebook didesain untuk dijalankan berurutan (dari sel
+pertama sampai akhir, atau per-bagian sesuai kebutuhan). Buka dan jalankan:
 
 ```bash
 jupyter notebook   # atau: jupyter lab
@@ -217,7 +213,7 @@ tensorboard --logdir runs
 
 ## Struktur Dataset
 
-Skrip pelatihan (`model.ipynb`/`model.py`) memakai
+Skrip pelatihan (`model.ipynb`) memakai
 `torchvision.datasets.ImageFolder` untuk **train** dan **val**, sehingga setiap
 kelas harus berupa subfolder:
 
@@ -285,11 +281,11 @@ kesalahan berdampak besar pada metrik kelas tersebut.
 
 ## Konfigurasi
 
-Parameter diubah langsung di dalam notebook (tidak ada file konfigurasi
-terpisah). Parameter penting di `model.ipynb`:
+Parameter diubah langsung di dalam notebook cell (tidak ada file konfigurasi
+terpisah). Parameter penting di `model.ipynb` (cell training):
 
 | Parameter                | Nilai                        | Keterangan                          |
-| ------------------------ | ---------------------------- | ----------------------------------- |
+| ------------------------ |---------------------------- | ----------------------------------- |
 | `batch_size`             | `32`                         | Ukuran batch train & val            |
 | `num_epochs`             | `30`                         | Jumlah epoch maksimum               |
 | Optimizer                | `AdamW(lr=7e-5, weight_decay=1e-3)` | Optimizer                    |
@@ -301,12 +297,18 @@ terpisah). Parameter penting di `model.ipynb`:
 | Input size / Normalize   | `224×224`, mean/std ImageNet | Transform train & val               |
 | Augmentasi (train)       | `RandomRotation(15, fill=255)`, `RandomAffine(translate=0.1, scale=(0.8,1.2), fill=255)` | Rotasi & pergeseran ringan |
 
-Path dataset di `model.ipynb`: `train_dir = "./data/final/train"`,
-`val_dir = "./data/final/val"`, `pred_dir = "./data/final/test"`; bobot dimuat
-dari `model/best_model.pt`.
+**Path dataset di `model.ipynb`:**
+- Training: `train_dir = "./data/final/train"`
+- Validasi: `val_dir = "./data/final/val"`
+- Prediksi: `pred_dir = "./data/final/test"`
+- Bobot dimuat dari: `model/best_model.pt`
 
-Resolusi & path preprocessing diatur di blok `__main__` `preprocess.ipynb`
-(lihat [Cara Penggunaan](#cara-penggunaan)).
+**Path preprocessing di `preprocess.ipynb`:**
+- Input train/val: `INPUT_DATA_DIR = "data/v3/v3"`
+- Output train/val: `OUTPUT_DATA_DIR = "data/final"`
+- Input test: `TEST_INPUT_DIR = "data/prediction/prediction"`
+- Output test: `TEST_OUTPUT_DIR = "data/final/test"`
+- Resolusi target: `FINAL_RESOLUTION = 224`
 
 ## Troubleshooting
 
@@ -325,7 +327,6 @@ Resolusi & path preprocessing diatur di blok `__main__` `preprocess.ipynb`
 
 - Ultralytics YOLO — https://docs.ultralytics.com
 - Dataset: `phiard/aksara-jawa` (Kaggle, via `kagglehub`)
-- `Guide.pdf` dan `architecture.md` — dokumen pendukung dalam repositori
 
 ## Lisensi & Kontributor
 
